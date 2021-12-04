@@ -102,6 +102,19 @@ CREATE TABLE IF NOT EXISTS `BoardMembers` (
     FOREIGN KEY (`Member`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
 
+-- -----------------------------------------------------
+-- Table `Lists`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Lists` (
+	`ID` INT NOT NULL AUTO_INCREMENT,
+    `Board` INT NOT NULL,
+    `Title` VARCHAR(45) NOT NULL,
+	`Location` INT NOT NULL UNIQUE DEFAULT 0,
+    PRIMARY KEY (`ID`),
+    INDEX `idx_Board` (`Board` ASC),
+    FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`)    
+) ENGINE=INNODB;
+
 
 -- -----------------------------------------------------
 -- Table `Cards`
@@ -109,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `BoardMembers` (
 CREATE TABLE IF NOT EXISTS `Cards` (
     `ID` INT NOT NULL AUTO_INCREMENT,
     `Board` INT NOT NULL,
+    `List` INT NOT NULL,
+    `Location` INT NOT NULL UNIQUE DEFAULT 0,
     `Author` INT NOT NULL,
     `Title` VARCHAR(45) NOT NULL,
     `Description` VARCHAR(45),
@@ -116,8 +131,10 @@ CREATE TABLE IF NOT EXISTS `Cards` (
     `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`ID`),
     INDEX `idx_Board` (`Board` ASC),
+    INDEX `idx_List` (`List` ASC),
     INDEX `idx_Author` (`Author` ASC),
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
+    FOREIGN KEY (`List`) REFERENCES `Lists` (`ID`),
     FOREIGN KEY (`Author`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
 
@@ -171,7 +188,6 @@ CREATE TABLE IF NOT EXISTS `CardTags` (
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
     FOREIGN KEY (`Card`) REFERENCES `Cards` (`ID`)
 )  ENGINE=INNODB;
-
 
 -- -----------------------------------------------------
 -- Table `Reactions`
