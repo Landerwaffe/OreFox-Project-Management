@@ -48,13 +48,14 @@ DROP TABLE IF EXISTS `Reactions` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `Users` (
     `ID` INT NOT NULL AUTO_INCREMENT,
-    `Email` VARCHAR(255) NOT NULL UNIQUE,
+    `Email` VARCHAR(255) NOT NULL,
     `Password` VARCHAR(255) NOT NULL,
     `FirstName` VARCHAR(255) NOT NULL,
     `LastName` VARCHAR(255) NOT NULL,
     `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`ID`)
+    PRIMARY KEY (`ID`),
+    UNIQUE INDEX `uq_Email` (`Email`)
 )  ENGINE=INNODB;
 
 
@@ -66,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `UserRoles` (
     `User` INT NOT NULL,
     `Role` ENUM('User', 'Project Manager') NOT NULL,
     PRIMARY KEY (`ID`),
-    CONSTRAINT `UR_User` UNIQUE (`User` , `Role`),
+    UNIQUE INDEX `uq_User` (`User` ASC, `Role` ASC),
     FOREIGN KEY (`User`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
 
@@ -82,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `Boards` (
     `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`ID`),
-    CONSTRAINT `Board` UNIQUE (`Author` , `Title`),
+    UNIQUE INDEX `uq_Board` (`Author` ASC, `Title` ASC),
     FOREIGN KEY (`Author`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
 
@@ -96,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `BoardMembers` (
     `Member` INT NOT NULL,
     `Access` ENUM('Owner', 'Admin', 'Read', 'Write') NOT NULL DEFAULT 'Read',
     PRIMARY KEY (`ID`),
-    CONSTRAINT `Members` UNIQUE (`Board` , `Member`),
+    UNIQUE INDEX `uq_Members` (`Board` ASC, `Member` ASC),
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
     FOREIGN KEY (`Member`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
@@ -114,6 +115,8 @@ CREATE TABLE IF NOT EXISTS `Cards` (
     `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`ID`),
+    INDEX `idx_Board` (`Board` ASC),
+    INDEX `idx_Author` (`Author` ASC),
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
     FOREIGN KEY (`Author`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
@@ -131,6 +134,8 @@ CREATE TABLE IF NOT EXISTS `CardContent` (
     `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`ID`),
+    INDEX `idx_Card` (`Card` ASC),
+    INDEX `idx_Author` (`Author` ASC),
     FOREIGN KEY (`Card`) REFERENCES `Cards` (`ID`),
     FOREIGN KEY (`Author`) REFERENCES `Users` (`ID`)
 )  ENGINE=INNODB;
@@ -145,7 +150,8 @@ CREATE TABLE IF NOT EXISTS `BoardTags` (
     `Name` VARCHAR(45) NOT NULL,
     `Colour` CHAR(6) NOT NULL,
     PRIMARY KEY (`ID`),
-    CONSTRAINT `Board` UNIQUE (`Board` , `Name`),
+    INDEX `idx_Board` (`Board` ASC),
+    UNIQUE INDEX `uq_Board` (`Board` ASC, `Name` ASC),
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`)
 )  ENGINE=INNODB;
 
@@ -159,10 +165,13 @@ CREATE TABLE IF NOT EXISTS `CardTags` (
     `Card` INT NOT NULL,
     `Tag` INT NOT NULL,
     PRIMARY KEY (`ID`),
-    CONSTRAINT `Cards` UNIQUE (`Board` , `Card` , `Tag`),
+    INDEX `idx_Board` (`Board` ASC),
+    INDEX `idx_Card` (`Card` ASC),
+    UNIQUE INDEX `uq_Cards` (`Board` ASC, `Card` ASC, `Tag` ASC),
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
     FOREIGN KEY (`Card`) REFERENCES `Cards` (`ID`)
 )  ENGINE=INNODB;
+
 
 -- -----------------------------------------------------
 -- Table `Reactions`
@@ -174,7 +183,9 @@ CREATE TABLE IF NOT EXISTS `Reactions` (
 	`Reaction` ENUM('Like','Dislike','Check Mark','Cross') NOT NULL,
 	`DateCreated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`ID`),
-	CONSTRAINT `Reaction` UNIQUE (`Card`, `Author`, `Reaction`),
+    INDEX `idx_Card` (`Card` ASC),
+    INDEX `idx_Author` (`Author` ASC),
+	UNIQUE INDEX `uq_Reaction` (`Card` ASC, `Author` ASC, `Reaction` ASC),
 	FOREIGN KEY(`Card`) REFERENCES `Cards` (`ID`),
 	FOREIGN KEY(`Author`) REFERENCES `Users` (`ID`)
 ) ENGINE=INNODB;
