@@ -11,7 +11,8 @@ Tables:
 	UserRoles:	    Not really sure what this is for, they mentioned it in the meeting on the 1st December
 	Boards:		    Stores each individual "trello board"
 	BoardMembers:   Stores the members of each board
-	Cards:		    Stores each individual "trello card" which exists on some board
+    Lists: 			The lists in which cards are stored
+	Cards:		    Stores each individual "trello card" which exists on some board in some list
 	CardContent:    Stores the content for each card, its setup this way incase each card can have more than one item in it
 	BoardTags:	    These are the tags that a board has currently, useful so each board doesn't have to have the same tags
 	CardTags:	    The tags on each card are stored here, its setup so that a card can only have one of each tag
@@ -37,6 +38,7 @@ DROP TABLE IF EXISTS `Users` ;
 DROP TABLE IF EXISTS `UserRoles` ;
 DROP TABLE IF EXISTS `Boards` ;
 DROP TABLE IF EXISTS `BoardMembers` ;
+DROP TABLE IF EXISTS `Lists` ;
 DROP TABLE IF EXISTS `Cards` ;
 DROP TABLE IF EXISTS `CardContent` ;
 DROP TABLE IF EXISTS `BoardTags` ;
