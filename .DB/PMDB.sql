@@ -1,3 +1,27 @@
+/* 
+Project Management Database Creator
+=========================================================
+
+This will create the PMDB locally for you, you'll need to host a MySQL server on your own network if you want to use it (probably),
+unless someone else wants to host one for us to all use. Feel free to remove the 'DROP SCHEMA/TABLE' stuff locally if you want, i just left it there
+for debug purposes.
+
+Tables:
+	Users:		    Table for storing user accounts (this is for testing purposes only, OreFox will have their own on their servers)
+	UserRoles:	    Not really sure what this is for, they mentioned it in the meeting on the 1st December
+	Boards:		    Stores each individual "trello board"
+	BoardMembers:   Stores the members of each board
+	Cards:		    Stores each individual "trello card" which exists on some board
+	CardContent:    Stores the content for each card, its setup this way incase each card can have more than one item in it
+	BoardTags:	    These are the tags that a board has currently, useful so each board doesn't have to have the same tags
+	CardTags:	    The tags on each card are stored here, its setup so that a card can only have one of each tag
+	Reactions:	    Simple like/dislike for cards
+
+The Database Schema diagram/spreadsheet are on the onedrive if you want a little bit of an easier visual representation of the stuff below.
+
+Author: Thomas Fabian
+*/
+
 -- -----------------------------------------------------
 -- Schema PMDB
 -- -----------------------------------------------------
@@ -17,6 +41,7 @@ DROP TABLE IF EXISTS `Cards` ;
 DROP TABLE IF EXISTS `CardContent` ;
 DROP TABLE IF EXISTS `BoardTags` ;
 DROP TABLE IF EXISTS `CardTags` ;
+DROP TABLE IF EXISTS `Reactions` ;
 
 -- -----------------------------------------------------
 -- Table `Users`
@@ -138,3 +163,18 @@ CREATE TABLE IF NOT EXISTS `CardTags` (
     FOREIGN KEY (`Board`) REFERENCES `Boards` (`ID`),
     FOREIGN KEY (`Card`) REFERENCES `Cards` (`ID`)
 )  ENGINE=INNODB;
+
+-- -----------------------------------------------------
+-- Table `Reactions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Reactions` (
+	`ID` int NOT NULL AUTO_INCREMENT,
+	`Card` int NOT NULL,
+	`Author` int NOT NULL,
+	`Reaction` ENUM('Like','Dislike','Check Mark','Cross') NOT NULL,
+	`DateCreated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`ID`),
+	CONSTRAINT `Reaction` UNIQUE (`Card`, `Author`, `Reaction`),
+	FOREIGN KEY(`Card`) REFERENCES `Cards` (`ID`),
+	FOREIGN KEY(`Author`) REFERENCES `Users` (`ID`)
+) ENGINE=INNODB;
