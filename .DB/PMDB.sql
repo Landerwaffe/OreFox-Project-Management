@@ -34,178 +34,178 @@ DROP SCHEMA IF EXISTS `PMDB` ;
 CREATE SCHEMA IF NOT EXISTS `PMDB` DEFAULT CHARACTER SET utf8 ;
 USE `PMDB` ;
 
-DROP TABLE IF EXISTS `Users` ;
-DROP TABLE IF EXISTS `UserRoles` ;
-DROP TABLE IF EXISTS `Boards` ;
-DROP TABLE IF EXISTS `BoardMembers` ;
-DROP TABLE IF EXISTS `Lists` ;
-DROP TABLE IF EXISTS `Cards` ;
-DROP TABLE IF EXISTS `CardContent` ;
-DROP TABLE IF EXISTS `BoardTags` ;
-DROP TABLE IF EXISTS `CardTags` ;
-DROP TABLE IF EXISTS `Reactions` ;
+DROP TABLE IF EXISTS `pm_user` ;
+DROP TABLE IF EXISTS `pm_user_role` ;
+DROP TABLE IF EXISTS `pm_board` ;
+DROP TABLE IF EXISTS `pm_board_member` ;
+DROP TABLE IF EXISTS `pm_list` ;
+DROP TABLE IF EXISTS `pm_card` ;
+DROP TABLE IF EXISTS `pm_card_content` ;
+DROP TABLE IF EXISTS `pm_board_tag` ;
+DROP TABLE IF EXISTS `pm_card_tag` ;
+DROP TABLE IF EXISTS `pm_reaction` ;
 
 -- -----------------------------------------------------
--- Table `Users`
+-- Table `pm_user`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Users` (
-    `UserID` INT NOT NULL AUTO_INCREMENT,
-    `Email` VARCHAR(255) NOT NULL,
-    `Password` VARCHAR(255) NOT NULL,
-    `FirstName` VARCHAR(255) NOT NULL,
-    `LastName` VARCHAR(255) NOT NULL,
-    `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`UserID`),
-    UNIQUE INDEX `uq_Email` (`Email`)
+CREATE TABLE IF NOT EXISTS `pm_user` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `first_name` VARCHAR(255) NOT NULL,
+    `last_name` VARCHAR(255) NOT NULL,
+    `date_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `date_modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uq_email` (`email`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `UserRoles`
+-- Table `pm_user_role`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `UserRoles` (
-    `RoleID` INT NOT NULL AUTO_INCREMENT,
-    `User` INT NOT NULL,
-    `Role` ENUM('User', 'Project Manager') NOT NULL,
-    PRIMARY KEY (`RoleID`),
-    UNIQUE INDEX `uq_User` (`User` ASC, `Role` ASC),
-    FOREIGN KEY (`User`) REFERENCES `Users` (`UserID`)
+CREATE TABLE IF NOT EXISTS `pm_user_role` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `user` INT NOT NULL,
+    `role` ENUM('User', 'Project Manager') NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uq_User` (`user` ASC, `role` ASC),
+    FOREIGN KEY (`user`) REFERENCES `pm_user` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `Boards`
+-- Table `pm_board`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Boards` (
-    `BoardID` INT NOT NULL AUTO_INCREMENT,
-    `Author` INT NOT NULL,
-    `Title` VARCHAR(45) NOT NULL,
-    `Description` VARCHAR(45),
-    `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`BoardID`),
-    UNIQUE INDEX `uq_Board` (`Author` ASC, `Title` ASC),
-    FOREIGN KEY (`Author`) REFERENCES `Users` (`UserID`)
+CREATE TABLE IF NOT EXISTS `pm_board` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `author` INT NOT NULL,
+    `title` VARCHAR(45) NOT NULL,
+    `description` VARCHAR(45),
+    `date_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `date_modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uq_board` (`author` ASC, `title` ASC),
+    FOREIGN KEY (`author`) REFERENCES `pm_user` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `BoardMembers`
+-- Table `pm_board_member`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `BoardMembers` (
-    `MemberID` INT NOT NULL AUTO_INCREMENT,
-    `Board` INT NOT NULL,
-    `Member` INT NOT NULL,
-    `Access` ENUM('Owner', 'Admin', 'Read', 'Write') NOT NULL DEFAULT 'Read',
-    PRIMARY KEY (`MemberID`),
-    UNIQUE INDEX `uq_Members` (`Board` ASC, `Member` ASC),
-    FOREIGN KEY (`Board`) REFERENCES `Boards` (`BoardID`),
-    FOREIGN KEY (`Member`) REFERENCES `Users` (`UserID`)
+CREATE TABLE IF NOT EXISTS `pm_board_member` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `board` INT NOT NULL,
+    `member` INT NOT NULL,
+    `access` ENUM('Owner', 'Admin', 'Read', 'Write') NOT NULL DEFAULT 'Read',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uq_member` (`board` ASC, `member` ASC),
+    FOREIGN KEY (`board`) REFERENCES `pm_board` (`id`),
+    FOREIGN KEY (`member`) REFERENCES `pm_user` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `Lists`
+-- Table `pm_list`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Lists` (
-	`ListID` INT NOT NULL AUTO_INCREMENT,
-    `Board` INT NOT NULL,
-    `Title` VARCHAR(45) NOT NULL,
-	`Location` INT NOT NULL UNIQUE DEFAULT 0,
-    PRIMARY KEY (`ListID`),
-    INDEX `idx_Board` (`Board` ASC),
-    FOREIGN KEY (`Board`) REFERENCES `Boards` (`BoardID`)    
-) ENGINE=INNODB;
-
-
--- -----------------------------------------------------
--- Table `Cards`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Cards` (
-    `CardID` INT NOT NULL AUTO_INCREMENT,
-    `Board` INT NOT NULL,
-    `List` INT NOT NULL,
-    `Location` INT NOT NULL UNIQUE DEFAULT 0,
-    `Author` INT NOT NULL,
-    `Title` VARCHAR(45) NOT NULL,
-    `Description` VARCHAR(45),
-    `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`CardID`),
-    INDEX `idx_Board` (`Board` ASC),
-    INDEX `idx_List` (`List` ASC),
-    INDEX `idx_Author` (`Author` ASC),
-    FOREIGN KEY (`Board`) REFERENCES `Boards` (`BoardID`),
-    FOREIGN KEY (`List`) REFERENCES `Lists` (`ListID`),
-    FOREIGN KEY (`Author`) REFERENCES `Users` (`UserID`)
+CREATE TABLE IF NOT EXISTS `pm_list` (
+	`id` INT NOT NULL AUTO_INCREMENT,
+    `board` INT NOT NULL,
+    `title` VARCHAR(45) NOT NULL,
+	`location` INT NOT NULL UNIQUE DEFAULT 0,
+    PRIMARY KEY (`id`),
+    INDEX `idx_Board` (`board` ASC),
+    FOREIGN KEY (`board`) REFERENCES `pm_board` (`id`)    
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `CardContent`
+-- Table `pm_card`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `CardContent` (
-    `ContentID` INT NOT NULL AUTO_INCREMENT,
-    `Card` INT NOT NULL,
-    `Author` INT NOT NULL,
-    `Type` ENUM('Comment', 'List') NOT NULL,
-    `Contents` VARCHAR(2048) NULL,
-    `DateCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `DateModified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`ContentID`),
-    INDEX `idx_Card` (`Card` ASC),
-    INDEX `idx_Author` (`Author` ASC),
-    FOREIGN KEY (`Card`) REFERENCES `Cards` (`CardID`),
-    FOREIGN KEY (`Author`) REFERENCES `Users` (`UserID`)
+CREATE TABLE IF NOT EXISTS `pm_card` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `board` INT NOT NULL,
+    `list` INT NOT NULL,
+    `location` INT NOT NULL UNIQUE DEFAULT 0,
+    `author` INT NOT NULL,
+    `title` VARCHAR(45) NOT NULL,
+    `description` VARCHAR(45),
+    `date_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `date_modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_Board` (`board` ASC),
+    INDEX `idx_List` (`list` ASC),
+    INDEX `idx_Author` (`author` ASC),
+    FOREIGN KEY (`board`) REFERENCES `pm_board` (`id`),
+    FOREIGN KEY (`list`) REFERENCES `pm_list` (`id`),
+    FOREIGN KEY (`author`) REFERENCES `pm_user` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `BoardTags`
+-- Table `pm_card_content`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `BoardTags` (
-    `BTagID` INT NOT NULL AUTO_INCREMENT,
-    `Board` INT NOT NULL,
-    `Name` VARCHAR(45) NOT NULL,
-    `Colour` CHAR(6) NOT NULL,
-    PRIMARY KEY (`BTagID`),
-    INDEX `idx_Board` (`Board` ASC),
-    UNIQUE INDEX `uq_Board` (`Board` ASC, `Name` ASC),
-    FOREIGN KEY (`Board`) REFERENCES `Boards` (`BoardID`)
+CREATE TABLE IF NOT EXISTS `pm_card_content` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `card` INT NOT NULL,
+    `author` INT NOT NULL,
+    `type` ENUM('Comment', 'List') NOT NULL,
+    `contents` VARCHAR(2048) NULL,
+    `date_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `date_modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_card` (`card` ASC),
+    INDEX `idx_author` (`author` ASC),
+    FOREIGN KEY (`card`) REFERENCES `pm_card` (`id`),
+    FOREIGN KEY (`author`) REFERENCES `pm_user` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
--- Table `CardTags`
+-- Table `pm_board_tag`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `CardTags` (
-    `CTagID` INT NOT NULL AUTO_INCREMENT,
-    `Board` INT NOT NULL,
-    `Card` INT NOT NULL,
-    `Tag` INT NOT NULL,
-    PRIMARY KEY (`CTagID`),
-    INDEX `idx_Board` (`Board` ASC),
-    INDEX `idx_Card` (`Card` ASC),
-    UNIQUE INDEX `uq_Cards` (`Board` ASC, `Card` ASC, `Tag` ASC),
-    FOREIGN KEY (`Board`) REFERENCES `Boards` (`BoardID`),
-    FOREIGN KEY (`Card`) REFERENCES `Cards` (`CardID`)
+CREATE TABLE IF NOT EXISTS `pm_board_tag` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `board` INT NOT NULL,
+    `name` VARCHAR(45) NOT NULL,
+    `colour` CHAR(6) NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_board` (`board` ASC),
+    UNIQUE INDEX `uq_board` (`board` ASC, `name` ASC),
+    FOREIGN KEY (`board`) REFERENCES `pm_board` (`id`)
+)  ENGINE=INNODB;
+
+
+-- -----------------------------------------------------
+-- Table `pm_card_tag`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `pm_card_tag` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `board` INT NOT NULL,
+    `card` INT NOT NULL,
+    `tag` INT NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_board` (`board` ASC),
+    INDEX `idx_card` (`card` ASC),
+    UNIQUE INDEX `uq_cards` (`board` ASC, `card` ASC, `tag` ASC),
+    FOREIGN KEY (`board`) REFERENCES `pm_board` (`id`),
+    FOREIGN KEY (`card`) REFERENCES `pm_card` (`id`)
 )  ENGINE=INNODB;
 
 
 -- -----------------------------------------------------
 -- Table `Reactions`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Reactions` (
-	`ReactionID` int NOT NULL AUTO_INCREMENT,
-	`Card` int NOT NULL,
-	`Author` int NOT NULL,
-	`Reaction` ENUM('Like','Dislike','Check Mark','Cross') NOT NULL,
-	`DateCreated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`ReactionID`),
-    INDEX `idx_Card` (`Card` ASC),
-    INDEX `idx_Author` (`Author` ASC),
-	UNIQUE INDEX `uq_Reaction` (`Card` ASC, `Author` ASC, `Reaction` ASC),
-	FOREIGN KEY(`Card`) REFERENCES `Cards` (`CardID`),
-	FOREIGN KEY(`Author`) REFERENCES `Users` (`UserID`)
-) ENGINE=INNODB;
+CREATE TABLE IF NOT EXISTS `pm_reaction` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`card` int NOT NULL,
+	`author` int NOT NULL,
+	`reaction` ENUM('Like','Dislike','Check Mark','Cross') NOT NULL,
+	`date_created` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_card` (`card` ASC),
+    INDEX `idx_author` (`author` ASC),
+	UNIQUE INDEX `uq_reaction` (`card` ASC, `author` ASC, `reaction` ASC),
+	FOREIGN KEY(`card`) REFERENCES `pm_card` (`id`),
+	FOREIGN KEY(`author`) REFERENCES `pm_user` (`id`)
+)  ENGINE=INNODB;

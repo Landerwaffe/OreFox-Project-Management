@@ -5,84 +5,84 @@ USE `PMDB` ;
 -- -----------------------------------------------------
 
 -- Create some test users
-INSERT INTO `Users` (`Email`,`Password`,`Firstname`,`Lastname`) VALUES ('test@email.com','qwerty1','Joe','Blogs');
-INSERT INTO `Users` (`Email`,`Password`,`Firstname`,`Lastname`) VALUES ('foopy@email.com','qwerty1','Lorem','Ipsum');
+INSERT INTO `pm_user` (`email`,`password`,`first_name`,`last_name`) VALUES ('test@email.com','qwerty1','Joe','Blogs');
+INSERT INTO `pm_user` (`email`,`Password`,`first_name`,`last_name`) VALUES ('foopy@email.com','qwerty1','Lorem','Ipsum');
 
 -- Create some boards and tags, nested queries are hard to read yikes
-INSERT INTO `Boards` (`Author`,`Title`,`Description`) VALUES ((SELECT `UserID` FROM `Users` WHERE `Email` = 'test@email.com'), 'New Board', 'Some Description.');
-INSERT INTO `Boards` (`Author`,`Title`,`Description`) VALUES ((SELECT `UserID` FROM `Users` WHERE `Email` = 'foopy@email.com'), 'Foopy Board', 'Full of Foop.');
-INSERT INTO `BoardTags` (`Board`,`Name`,`Colour`) VALUES ((SELECT `b`.`BoardID` FROM `Boards` `b` INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'), 'In Development', 'FF0000');
-INSERT INTO `BoardTags` (`Board`,`Name`,`Colour`) VALUES ((SELECT `b`.`BoardID` FROM `Boards` `b` INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'), 'Pending', '00FF00');
+INSERT INTO `pm_board` (`author`,`title`,`description`) VALUES ((SELECT `id` FROM `pm_user` WHERE `email` = 'test@email.com'), 'New Board', 'Some Description.');
+INSERT INTO `pm_board` (`author`,`title`,`description`) VALUES ((SELECT `id` FROM `pm_user` WHERE `email` = 'foopy@email.com'), 'Foopy Board', 'Full of Foop.');
+INSERT INTO `pm_board_tag` (`board`,`name`,`colour`) VALUES ((SELECT `b`.`id` FROM `pm_board` `b` INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'), 'In Development', 'FF0000');
+INSERT INTO `pm_board_tag` (`board`,`name`,`colour`) VALUES ((SELECT `b`.`id` FROM `pm_board` `b` INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'), 'Pending', '00FF00');
 
 -- Add some members to the first board, obviously test@email should be the owner of his own board
-INSERT INTO `BoardMembers` (`Board`,`Member`,`Access`) VALUES (
-  (SELECT `b`.`BoardID` FROM `Boards` `b` 
-     INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'),
-  (SELECT `UserID` FROM `Users` WHERE `Email` = 'test@email.com'),
+INSERT INTO `pm_board_member` (`board`,`member`,`access`) VALUES (
+  (SELECT `b`.`id` FROM `pm_board` `b` 
+     INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'),
+  (SELECT `id` FROM `pm_user` WHERE `email` = 'test@email.com'),
   'Owner'
 );
 
-INSERT INTO `BoardMembers` (`Board`,`Member`,`Access`) VALUES (
-  (SELECT `b`.`BoardID` FROM `Boards` `b` 
-     INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'),
-  (SELECT `UserID` FROM `Users` WHERE `Email` = 'foopy@email.com'),
+INSERT INTO `pm_board_member` (`board`,`member`,`access`) VALUES (
+  (SELECT `b`.`id` FROM `pm_board` `b` 
+     INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'),
+  (SELECT `id` FROM `pm_user` WHERE `email` = 'foopy@email.com'),
   'Write'
 );
 
 -- This is disgusting lmao, but making a new list and assigning it a location (from left to right on the board)
-INSERT INTO `Lists` (`Board`,`Location`,`Title`) VALUES (
-  (SELECT `b`.`BoardID` FROM `Boards` `b` 
-	INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'),
-  (SELECT (COUNT(*) + 1) FROM `Lists` `l` 
-	WHERE `l`.`Board` = (
-		SELECT `b`.`BoardID` FROM `Boards` `b` 
-        INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board')),
+INSERT INTO `pm_list` (`board`,`Location`,`title`) VALUES (
+  (SELECT `b`.`id` FROM `pm_board` `b` 
+	INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'),
+  (SELECT (COUNT(*) + 1) FROM `pm_list` `l` 
+	WHERE `l`.`board` = (
+		SELECT `b`.`id` FROM `pm_board` `b` 
+        INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board')),
   'This is a List'
 );
 
 -- Let's have foopy make a card on test's board
-INSERT INTO `Cards` (`Board`,`List`,`Author`,`Title`,`Description`) VALUES (
-  (SELECT `b`.`BoardID` FROM `Boards` `b` 
-     INNER JOIN `Users` `u` ON `b`.`Author` = `u`.`UserID` AND `b`.`Title` = 'New Board'),
+INSERT INTO `pm_card` (`board`,`List`,`author`,`title`,`Description`) VALUES (
+  (SELECT `b`.`id` FROM `pm_board` `b` 
+     INNER JOIN `pm_user` `u` ON `b`.`author` = `u`.`id` AND `b`.`title` = 'New Board'),
   1,
-  (SELECT `UserID` 
-     FROM `Users` 
-     WHERE `Email` = 'foopy@email.com'),
+  (SELECT `id` 
+     FROM `pm_user` 
+     WHERE `email` = 'foopy@email.com'),
   'Some Card',
   'This card is fancy!'
 );
 
 -- Let's attach a tag to this new card, by this point we should probably have the board, card and tag id's cached in memory, 
-INSERT INTO `CardTags` (`Board`,`Card`,`Tag`) VALUES (1, 1, 1);
-INSERT INTO `CardTags` (`Board`,`Card`,`Tag`) VALUES (1, 1, 2);
+INSERT INTO `pm_card_tag` (`board`,`card`,`tag`) VALUES (1, 1, 1);
+INSERT INTO `pm_card_tag` (`board`,`card`,`tag`) VALUES (1, 1, 2);
 
 -- -----------------------------------------------------
 -- Test Selections, just for fun!
 -- -----------------------------------------------------
 
-SELECT * FROM `Users`;
-SELECT * FROM `Boards`;
-SELECT * FROM `Lists`;
-SELECT * FROM `BoardTags`;
-SELECT * FROM `Cards`;
+SELECT * FROM `pm_user`;
+SELECT * FROM `pm_board`;
+SELECT * FROM `pm_list`;
+SELECT * FROM `pm_board_tag`;
+SELECT * FROM `pm_card`;
 
 -- Show all the Board Members
-SELECT CONCAT(`b`.`BoardID`,'@',`b`.`Title`) AS `Board`, `u`.`Email` AS `Member`, `bm`.`Access` 
-  FROM `BoardMembers` `bm`
-  INNER JOIN `Boards` `b` ON `bm`.`Board` = `b`.`BoardID`
-  INNER JOIN `Users` `u` ON `bm`.`Member` = `u`.`UserID`;
+SELECT CONCAT(`b`.`id`,'@',`b`.`title`) AS `board`, `u`.`email` AS `member`, `bm`.`Access` 
+  FROM `pm_board_member` `bm`
+  INNER JOIN `pm_board` `b` ON `bm`.`board` = `b`.`id`
+  INNER JOIN `pm_user` `u` ON `bm`.`Member` = `u`.`id`;
 
 -- Show all the cards
-SELECT CONCAT(`b`.`BoardID`,'@',`b`.`Title`) AS `Board`, `l`.`Title` AS `List`, `u`.`Email` AS `Author`, `c`.`Title`, `c`.`Description`, `c`.`DateModified` 
-  FROM `Cards` `c`
-  INNER JOIN `Users` `u` ON `c`.`Author` = `u`.`UserID`
-  INNER JOIN `Boards` `b` ON `c`.`Board` = `b`.`BoardID`
-  INNER JOIN `Lists` `l` ON `c`.`Board` = `l`.`Board` AND `c`.`List` = `l`.`ListID`;
+SELECT CONCAT(`b`.`id`,'@',`b`.`title`) AS `board`, `l`.`title` AS `list`, `u`.`email` AS `author`, `c`.`title`, `c`.`Description`, `c`.`DateModified` 
+  FROM `pm_card` `c`
+  INNER JOIN `pm_user` `u` ON `c`.`author` = `u`.`id`
+  INNER JOIN `pm_board` `b` ON `c`.`board` = `b`.`id`
+  INNER JOIN `pm_list` `l` ON `c`.`board` = `l`.`board` AND `c`.`List` = `l`.`ListID`;
 
 -- Show all the card tags
-SELECT CONCAT(`b`.`BoardID`,'@',`b`.`Title`) AS `Board`, `c`.`Title` AS `Card`, `bt`.`Name` AS `Tag`, `bt`.`Colour`
-  FROM `CardTags` `ct`
-  INNER JOIN `Cards` `c` ON `ct`.`Card` = `c`.`CardID`
-  INNER JOIN `Boards` `b` ON `ct`.`Board` = `b`.`BoardID`
-  INNER JOIN `BoardTags` `bt` ON `ct`.`Tag` = `bt`.`BTagID`;
+SELECT CONCAT(`b`.`id`,'@',`b`.`title`) AS `board`, `c`.`title` AS `card`, `bt`.`Name` AS `tag`, `bt`.`Colour`
+  FROM `pm_card_tag` `ct`
+  INNER JOIN `pm_card` `c` ON `ct`.`Card` = `c`.`id`
+  INNER JOIN `pm_board` `b` ON `ct`.`board` = `b`.`id`
+  INNER JOIN `pm_board_tag` `bt` ON `ct`.`Tag` = `bt`.`id`;
 
