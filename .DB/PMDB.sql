@@ -2,23 +2,21 @@
 Project Management Database Creator
 =========================================================
 
-This will create the PMDB locally for you, you'll need to host a MySQL server on your own network if you want to use it (probably),
-unless someone else wants to host one for us to all use. Feel free to remove the 'DROP SCHEMA/TABLE' stuff locally if you want, i just left it there
-for debug purposes.
+For the Django project, you'll need to host this database via XAMPP following whatever setup is within the 'settings.py' django config,
+you can install the database by copy-pasting this into the SQL page on the myphpadmin launch pad. 
+Don't forget to run 'python manage.py migrate' afterwards.
 
 Tables:
-	Users:		    Table for storing user accounts (this is for testing purposes only, OreFox will have their own on their servers)
-	UserRoles:	    Not really sure what this is for, they mentioned it in the meeting on the 1st December
-	Boards:		    Stores each individual "trello board"
-	BoardMembers:   Stores the members of each board
-    Lists: 			The lists in which cards are stored
-	Cards:		    Stores each individual "trello card" which exists on some board in some list
-	CardContent:    Stores the content for each card, its setup this way incase each card can have more than one item in it
-	BoardTags:	    These are the tags that a board has currently, useful so each board doesn't have to have the same tags
-	CardTags:	    The tags on each card are stored here, its setup so that a card can only have one of each tag
-	Reactions:	    Simple like/dislike for cards
-
-The Database Schema diagram/spreadsheet are on the onedrive if you want a little bit of an easier visual representation of the stuff below.
+	pm_user:		    Table for storing user accounts (this is for testing purposes only, OreFox will have their own on their servers or should we use the table supplied by django 'auth_user'?)
+	pm_user_role:	    Not really sure what this is for, they mentioned it in the meeting on the 1st December
+	pm_board:		    Stores each individual "trello board"
+	pm_board_member:    Stores the members of each board
+    pm_list: 			The lists in which cards are stored
+	pm_card:		    Stores each individual "trello card" which exists on some board in some list
+	pm_card_content:    Stores the content for each card, its setup this way incase each card can have more than one item in it
+	pm_board_tag:	    These are the tags that a board has currently, useful so each board doesn't have to have the same tags
+	pm_card_tag:	    The tags on each card are stored here, its setup so that a card can only have one of each tag
+	pm_reaction:	    Simple like/dislike for cards
 
 Author: Thomas Fabian
 */
