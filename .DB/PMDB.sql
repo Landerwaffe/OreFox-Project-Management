@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `pm_card_content` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `card` INT NOT NULL,
     `author` INT NOT NULL,
-    `type` ENUM('Comment', 'List') NOT NULL,
+    `type` ENUM('Comment', 'List', 'Attachment') NOT NULL,
     `contents` VARCHAR(2048) NULL,
     `date_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `date_modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
