@@ -17,9 +17,11 @@ from django.contrib import admin
 from django.urls import path
 
 from tasks.views import *
+from board.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('b/<int:id>/', board_view, name = "board"),
     path('tasks/', index, name = "list"),
     path('update_task/<str:pk>', updateTask, name = "update_task"),
     path('delete/<str:pk>', deleteTask, name = "delete")
