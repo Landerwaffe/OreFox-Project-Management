@@ -1,12 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 
 from .models import *
 
 # Create your views here.
 
-def board_view(req, board_id, *args, **kwargs): 
+def board_view(request, board_id, *args, **kwargs): 
     try:
         board = Board.objects.get(id=board_id)
         members = BoardMember.objects.filter(board=board_id)
@@ -16,22 +15,25 @@ def board_view(req, board_id, *args, **kwargs):
         # Just some debug text, this can be removed
         print('\nBoard:\t%s\nUser:\t(%s,%s)\nMembers:%s\n' % (
             board.get_absolute_url(),
-            req.user.id, 
-            req.user,
+            request.user.id, 
+            request.user,
             members.values_list('member', flat=True)))
 
         # Show the website to users who are authenticated and a member of the board or a member of staff
-        if req.user.is_authenticated and (req.user.id in members.values_list('member', flat=True) or req.user == board.author or req.user.is_staff):
-            return render(req, "b.html", {
+        if request.user.is_authenticated and (request.user == board.author or request.user.is_staff or request.user.id in members.values_list('member', flat=True)):
+            return render(request, "board.html", {
                 "board": board,
                 "members": members,
                 "lists": lists,
                 "cards": cards
             })
-        else: 
-            # Just throw an error if it happens, there's probably a better way to do this
-            raise Exception("ACCESS DENIED: %s by %s" % (board.get_absolute_url(), req.user))
 
-    except Exception:
-        # Return the error page if anything goes wrong e.g. invalid credentials
-        return render(req, "error.html")
+    except ObjectDoesNotExist: 
+        pass
+    
+    # A View has to return something, so lets just return the error page.
+    return render(request, "error.html")
+
+
+def home_view(request, *args, **kwargs):
+    return render(request, "home.html")
