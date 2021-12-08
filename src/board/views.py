@@ -16,13 +16,12 @@ def board_view(request, board_id, *args, **kwargs):
     print('\nUser:(%s,%s) Auth:%s\nMembers:%s' % (request.user.id, request.user, request.user.is_authenticated, boardmembers.values_list('member', flat=True)))
 
     # Check if the user is a member on the board, if they're not don't direct them to the page
-    if request.user.id in boardmembers.values_list('member', flat=True) and request.user.is_authenticated == True:
-        context = {
+    if request.user.is_authenticated and request.user.id in boardmembers.values_list('member', flat=True):
+        return render(request, "b.html", {
             "board": board,
             "members": boardmembers,
             "lists": lists,
             "cards": cards
-        }
-        return render(request, "b.html", context)
+        })
     else:
         return render(request, "error.html")
