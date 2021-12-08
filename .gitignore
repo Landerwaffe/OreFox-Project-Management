@@ -2,4 +2,6 @@
 /Include
 /Lib
 /Scripts
+/src/*/migrations
+/src/*/__pycache__
 pyvenv.cfg
