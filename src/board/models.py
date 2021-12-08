@@ -167,7 +167,6 @@ class CardTag(models.Model):
     class Meta:
         constraints = [ models.UniqueConstraint(fields=['board','card','tag'], name='uq_card_tag') ]
         indexes = [ models.Index(fields=['board', 'card']) ]
-        
 
 class Reaction(models.Model):
     """
