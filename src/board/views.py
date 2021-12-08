@@ -12,10 +12,11 @@ def board_view(request, board_id, *args, **kwargs):
     lists = List.objects.filter(board=board_id)
     cards = Card.objects.filter(board=board_id)
 
+    # Just some debug text, this can be removed
+    print('\nUser:(%s,%s) Auth:%s\nMembers:%s' % (request.user.id, request.user, request.user.is_authenticated, boardmembers.values_list('member', flat=True)))
+
     # Check if the user is a member on the board, if they're not don't direct them to the page
-    if request.user not in boardmembers.values_list('member', flat=True):
-        return render(request, "error.html")
-    else:   
+    if request.user.id in boardmembers.values_list('member', flat=True) and request.user.is_authenticated == True:
         context = {
             "board": board,
             "members": boardmembers,
@@ -23,3 +24,5 @@ def board_view(request, board_id, *args, **kwargs):
             "cards": cards
         }
         return render(request, "b.html", context)
+    else:
+        return render(request, "error.html")
