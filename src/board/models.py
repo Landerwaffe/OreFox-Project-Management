@@ -73,8 +73,8 @@ class Board(models.Model):
 
 class BoardMember(models.Model):
     """
-    Board Member
-    ------------
+    Board Member Model
+    ------------------
 
     These are the members of each board, this could likely extend djangos built in user model for convenience.
     """
@@ -100,8 +100,8 @@ class BoardMember(models.Model):
 
 class List(models.Model):
     """
-    List
-    ----
+    List Model
+    ----------
 
     A List is a 'container' similar to what holds the cards on trello. The location field is the order 
     left-to-right on the board, I want it to be unique so that only one list can be in a location, but I'm not
@@ -117,8 +117,8 @@ class List(models.Model):
 
 class Card(models.Model):
     """
-    Card
-    ----
+    Card Model
+    ----------
 
     These are the cards that are contained within a list on a board, they aren't unique and any amount of the same
     card can be made. The content is stored in another model based on some enum choice.
@@ -140,8 +140,8 @@ class Card(models.Model):
 
 class Comment(models.Model):
     """
-    Comment
-    ------------
+    Comment Model
+    -------------
 
     A Comment that can be left on a card.
     """
@@ -158,8 +158,8 @@ class Comment(models.Model):
 
 class Task(models.Model):
     """
-    Tasks
-    =====
+    Task Model
+    ----------
 
     This is the sub-task model for inside the cards.
     """
@@ -174,8 +174,8 @@ class Task(models.Model):
 
 class Attachment(models.Model):
     """
-    Attachment
-    ----------
+    Attachment Model
+    ----------------
 
     This Model handles file attachments to cards.
     """
@@ -192,7 +192,7 @@ class Attachment(models.Model):
 
 class Tag(models.Model):
     """
-    Tag
+    Tag Model
     ---------
 
     A Board Tag is some coloured label that can be applied to any card within a board (uniquely) and this is the 
@@ -209,8 +209,8 @@ class Tag(models.Model):
 
 class CardTag(models.Model):
     """
-    Card Tag
-    --------
+    Card Tag Model
+    --------------
 
     References the board tags so that each card can be supplied with its own tags (uniquely of course!)
     """
@@ -224,10 +224,10 @@ class CardTag(models.Model):
 
 class Reaction(models.Model):
     """
-    Reaction
-    --------
+    Reaction Model
+    --------------
 
-    This model is just about user interaction on card content, whether they like or dislike it etc.
+    This model is just about user interaction on card comments, whether they like or dislike it etc.
     """
     class Reactions(models.IntegerChoices):
         LIKE = 1
