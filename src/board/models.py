@@ -44,7 +44,7 @@ class Board(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('board:detail_view', args=[str(self.id)])
+        return reverse('b:id', kwargs={'id': str(self.id)})
 
 class BoardMember(models.Model):
     """

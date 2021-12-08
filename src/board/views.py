@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Board
+
+from .models import *
 
 # Create your views here.
 
-def board_view(request, id, *args, **kwargs): 
-    obj = Board.objects.get(id)
+def board_view(request, board, *args, **kwargs): 
     context = {
-        "object": obj
+        "board": Board.objects.get(id=board),
+        "lists": List.objects.get(board=board),
+        "cards": Card.objects.get(board=board)
     }
-    return render(request, "board.html", context)
+    return render(request, "b.html", context)

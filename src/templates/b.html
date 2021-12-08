@@ -1,11 +1,10 @@
 <!doctype html>
 <html>
     <head>
-    	<title>It's a Board!</title>
+    	<title>{{ board.title }} | Project Management System</title>
 	</head>
 	<body>
-        <h1>A Board!</h1>
-        {{ request.user }}
-	    <p> Super Mario in Real Life </p>
+        <h1>{{ board.title }}</h1>
+	    <p>{% if board.description != None %}{{board.description}}{% endif %}</p>
 	</body>
 </html>
