@@ -10,6 +10,7 @@ Here is my adaptation of the SQL/schema within /.DB/PMDB.sql, I'm not sure if it
 the ForeignKey and MYSQL Indexing goes. Might need to do some more reading / asking of questions.
 
 Contains Models:
+    Profile
     Board
     BoardMember
     List
@@ -22,6 +23,27 @@ Contains Models:
 Author: Thomas Fabian
 """
 
+class Profile(models.Model):
+    """
+    Member Model
+    ------------
+
+    Extends the User with additional fields unrelated to authentication. Will update/create with the addition
+    of new users within auth_user.
+
+    Access this extra information with 'user.profile.birth_date' etc.
+    """
+    user        = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    birth_date  = models.DateField(null=True, blank=True)
+    location    = models.CharField(max_length=30, blank=True)
+    bio         = models.TextField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ('user', )
+
+    def __str__(self):
+        return self.user.username
+
 class Board(models.Model):
     """
     Board Model
@@ -30,15 +52,14 @@ class Board(models.Model):
     This is the base model for a specific project management board. All cards and board members reference this 
     model.
     """
-    title           = models.CharField(max_length=255, db_index=True)
-    author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True)
-    description     = models.TextField()
+    title           = models.CharField(max_length=45)
+    author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    description     = models.TextField(max_length=500, blank=True)
     date_created    = models.DateTimeField(auto_now_add=True)
     date_modified   = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [ models.UniqueConstraint(fields=['author','title'], name='uq_board') ]
-        indexes = [ models.Index(fields=['author', 'title']) ]
 
     def __str__(self):
         return self.title
@@ -63,12 +84,12 @@ class BoardMember(models.Model):
 
     # Fields
     board   = models.ForeignKey(Board, on_delete=models.CASCADE)
-    member  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True)
+    member  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     access  = models.IntegerField(choices=Access.choices, default=Access.READ)
 
     class Meta:
+        ordering = ('board', )
         constraints = [ models.UniqueConstraint(fields=['board','member'], name='uq_member') ]
-        indexes = [ models.Index(fields=['board', 'member']) ]
 
     def has_admin_privileges(self):
         return self.access in {self.OWNER, self.ADMIN}
@@ -88,6 +109,7 @@ class List(models.Model):
     location    = models.PositiveIntegerField(unique=True)
 
     class Meta:
+        ordering = ('board', )
         indexes = [ models.Index(fields=['board']) ]
 
 class Card(models.Model):
@@ -102,13 +124,18 @@ class Card(models.Model):
     list            = models.ForeignKey(List, on_delete=models.CASCADE)
     location        = models.PositiveIntegerField()
     author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title           = models.CharField(max_length=45)
-    description     = models.TextField(max_length=256)
+    title           = models.CharField(max_length=45, default='New Card')
+    description     = models.TextField(max_length=256, blank=True)
     date_created    = models.DateTimeField(auto_now_add=True)
     date_modified   = models.DateTimeField(auto_now=True)
 
     class Meta:
-        indexes = [ models.Index(fields=['board', 'list', 'author']) ]
+        ordering = ('board', 'list', )
+        indexes = [ 
+            models.Index(fields=['board']),
+            models.Index(fields=['list']),
+            models.Index(fields=['author'])
+        ]
 
     def __str__(self):
         return self.title
@@ -129,12 +156,16 @@ class CardContent(models.Model):
     card            = models.ForeignKey(Card, on_delete=models.CASCADE)
     author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type            = models.IntegerField(choices=ContentType.choices, default=ContentType.COMMENT)
-    contents        = models.CharField(max_length=2048, null=False)
+    contents        = models.CharField(max_length=2048)
     date_created    = models.DateTimeField(auto_now_add=True)
     date_modified   = models.DateTimeField(auto_now=True)
 
     class Meta:
-        indexes = [ models.Index(fields=['card', 'author']) ]
+        ordering = ('card', )
+        indexes = [ 
+            models.Index(fields=['card']), 
+            models.Index(fields=['author']) 
+        ]
 
 class BoardTag(models.Model):
     """
@@ -149,8 +180,8 @@ class BoardTag(models.Model):
     colour  = models.CharField(max_length=6)
 
     class Meta:
+        ordering = ('board', )
         constraints = [ models.UniqueConstraint(fields=['board','name'], name='uq_board_tag') ]
-        indexes = [ models.Index(fields=['board', 'name']) ]
 
 class CardTag(models.Model):
     """
@@ -165,17 +196,15 @@ class CardTag(models.Model):
     author  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
+        ordering = ('board', 'card', )
         constraints = [ models.UniqueConstraint(fields=['board','card','tag'], name='uq_card_tag') ]
-        indexes = [ models.Index(fields=['board', 'card']) ]
 
 class Reaction(models.Model):
     """
     Reaction
     --------
 
-    This model is just about user interaction on cards, whether they like or dislike it etc.
-    I was considering just making this applicable to the card content though as that would make more sense (assuming
-    that this model gets used at all as it's not a high priority goal)
+    This model is just about user interaction on card content, whether they like or dislike it etc.
     """
     class Reactions(models.IntegerChoices):
         LIKE = 1
@@ -183,11 +212,11 @@ class Reaction(models.Model):
         CHECKMARK = 3
         CROSS = 4
 
-    card            = models.ForeignKey(Card, on_delete=models.CASCADE)
+    card_content    = models.ForeignKey(CardContent, on_delete=models.CASCADE)
     author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reaction        = models.IntegerField(choices=Reactions.choices)
     date_created    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [ models.UniqueConstraint(fields=['card','author','reaction'], name='uq_reaction') ]
-        indexes = [ models.Index(fields=['card', 'author']) ]
+        ordering = ('card_content', )
+        constraints = [ models.UniqueConstraint(fields=['card_content','author','reaction'], name='uq_reaction') ]
