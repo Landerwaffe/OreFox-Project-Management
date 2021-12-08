@@ -16,14 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from tasks.views import *
+# from tasks.views import *
 from board.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('b/<int:board_id>', board_view, name = "board-main"),
-    path('tasks/', index, name = "list"),
-    path('update_task/<str:pk>', updateTask, name = "update_task"),
-    path('delete/<str:pk>', deleteTask, name = "delete")
+    # path('tasks/', index, name = "list"),
+    # path('update_task/<str:pk>', updateTask, name = "update_task"),
+    # path('delete/<str:pk>', deleteTask, name = "delete")
 ]
 

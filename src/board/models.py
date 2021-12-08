@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.db.models.fields import BooleanField
 from django.urls import reverse
 
 """
@@ -15,8 +16,10 @@ Contains Models:
     BoardMember
     List
     Card
-    CardContent
-    BoardTag
+    Comment
+    Task
+    Attachment
+    Tag
     CardTag
     Reaction
 
@@ -37,6 +40,7 @@ class Profile(models.Model):
     birth_date  = models.DateField(null=True, blank=True)
     location    = models.CharField(max_length=30, blank=True)
     bio         = models.TextField(max_length=500, blank=True)
+    avatar      = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     class Meta:
         ordering = ('user', )
@@ -83,7 +87,7 @@ class BoardMember(models.Model):
         WRITE = 4
 
     # Fields
-    board   = models.ForeignKey(Board, on_delete=models.CASCADE)
+    board   = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     member  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     access  = models.IntegerField(choices=Access.choices, default=Access.READ)
 
@@ -104,13 +108,12 @@ class List(models.Model):
     sure how swapping them around should work (in the case of inserting a list inbetween pre-existing or moving
     them around)
     """
-    board       = models.ForeignKey(Board, on_delete=models.CASCADE)
+    board       = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     title       = models.CharField(max_length=45)
     location    = models.PositiveIntegerField(unique=True)
 
     class Meta:
         ordering = ('board', )
-        indexes = [ models.Index(fields=['board']) ]
 
 class Card(models.Model):
     """
@@ -120,10 +123,10 @@ class Card(models.Model):
     These are the cards that are contained within a list on a board, they aren't unique and any amount of the same
     card can be made. The content is stored in another model based on some enum choice.
     """
-    board           = models.ForeignKey(Board, on_delete=models.CASCADE)
+    board           = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     list            = models.ForeignKey(List, on_delete=models.CASCADE)
     location        = models.PositiveIntegerField()
-    author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True)
     title           = models.CharField(max_length=45, default='New Card')
     description     = models.TextField(max_length=256, blank=True)
     date_created    = models.DateTimeField(auto_now_add=True)
@@ -131,51 +134,72 @@ class Card(models.Model):
 
     class Meta:
         ordering = ('board', 'list', )
-        indexes = [ 
-            models.Index(fields=['board']),
-            models.Index(fields=['list']),
-            models.Index(fields=['author'])
-        ]
 
     def __str__(self):
         return self.title
 
-class CardContent(models.Model):
+class Comment(models.Model):
     """
-    Card Content
+    Comment
     ------------
 
-    A Card can have any amount of content added into it such as comments, lists and file attachments. I'm not sure
-    that storing a file in a charfield is optimal though (in MYSQL you'd normally use a BLOB)
+    A Comment that can be left on a card.
     """
-    class ContentType(models.IntegerChoices):
-        COMMENT = 1
-        LIST = 2
-        ATTACHMENT = 3 
 
+    board           = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     card            = models.ForeignKey(Card, on_delete=models.CASCADE)
     author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    type            = models.IntegerField(choices=ContentType.choices, default=ContentType.COMMENT)
-    contents        = models.CharField(max_length=2048)
+    comment         = models.CharField(max_length=2048)
     date_created    = models.DateTimeField(auto_now_add=True)
     date_modified   = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('card', )
-        indexes = [ 
-            models.Index(fields=['card']), 
-            models.Index(fields=['author']) 
-        ]
+        ordering = ('board', 'card', )
 
-class BoardTag(models.Model):
+class Task(models.Model):
     """
-    Board Tag
+    Tasks
+    =====
+
+    This is the sub-task model for inside the cards.
+    """
+
+    board   = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
+    card    = models.ForeignKey(Card, on_delete=models.CASCADE)
+    name    = models.CharField(max_length=25)
+    done    = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('board', 'card', )
+
+class Attachment(models.Model):
+    """
+    Attachment
+    ----------
+
+    This Model handles file attachments to cards.
+    """
+    def get_board_directory_path(instance, filename):
+        return 'board_%s/%s' % (instance.board.id, filename)
+
+    board   = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
+    card    = models.ForeignKey(Card, on_delete=models.CASCADE)
+    author  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file    = models.FileField(upload_to=get_board_directory_path)
+
+    class Meta:
+        ordering = ('board', 'card', )
+
+class Tag(models.Model):
+    """
+    Tag
     ---------
 
     A Board Tag is some coloured label that can be applied to any card within a board (uniquely) and this is the 
     model that stores the tags available for each board.
     """
-    board   = models.ForeignKey(Board, on_delete=models.CASCADE)
+
+    board   = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     name    = models.CharField(max_length=32)
     colour  = models.CharField(max_length=6)
 
@@ -190,10 +214,9 @@ class CardTag(models.Model):
 
     References the board tags so that each card can be supplied with its own tags (uniquely of course!)
     """
-    board   = models.ForeignKey(Board, on_delete=models.CASCADE)
+    board   = models.ForeignKey(Board, on_delete=models.CASCADE, db_index=True)
     card    = models.ForeignKey(Card, on_delete=models.CASCADE)
-    tag     = models.ForeignKey(BoardTag, on_delete=models.CASCADE)
-    author  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    tag     = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('board', 'card', )
@@ -212,11 +235,11 @@ class Reaction(models.Model):
         CHECKMARK = 3
         CROSS = 4
 
-    card_content    = models.ForeignKey(CardContent, on_delete=models.CASCADE)
+    comment         = models.ForeignKey(Comment, on_delete=models.CASCADE)
     author          = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reaction        = models.IntegerField(choices=Reactions.choices)
     date_created    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('card_content', )
-        constraints = [ models.UniqueConstraint(fields=['card_content','author','reaction'], name='uq_reaction') ]
+        ordering = ('comment', )
+        constraints = [ models.UniqueConstraint(fields=['comment','author','reaction'], name='uq_reaction') ]
