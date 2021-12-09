@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
 
 from .models import *
+from .forms import *
 
 # Create your views here.
-
 def board_view(request, board_id, *args, **kwargs): 
     try:
         board = Board.objects.get(id=board_id)
@@ -22,6 +22,7 @@ def board_view(request, board_id, *args, **kwargs):
         # Show the website to users who are authenticated and a member of the board or a member of staff
         if request.user.is_authenticated and (request.user == board.author or request.user.is_staff or request.user.id in members.values_list('member', flat=True)):
             return render(request, "board.html", {
+                "title": board.title,
                 "board": board,
                 "members": members,
                 "lists": lists,
@@ -31,9 +32,17 @@ def board_view(request, board_id, *args, **kwargs):
     except ObjectDoesNotExist: 
         pass
     
-    # A View has to return something, so lets just return the error page.
-    return render(request, "error.html")
+    return error_view(request)
 
 
 def home_view(request, *args, **kwargs):
-    return render(request, "home.html")
+    return render(request, "home.html", { 
+        "title": 'Home' 
+    })
+
+
+def error_view(request, *args, **kwargs):
+    return render(request, "error.html", { 
+        "title": 'Error'
+    })
+

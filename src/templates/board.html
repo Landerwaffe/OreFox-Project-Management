@@ -2,9 +2,16 @@
 
 {% extends 'base.html' %}
 
-{% block title %}{{ board.title}}{% endblock title %}
-
 {% block content %}
-<h1>{{ board.title }}</h1>
+
+<h1>{{ board.title|title }}</h1>
 <p>{% if board.description != None %}{{board.description}}{% endif %}</p>
+
+<h4>Board Members:</h2>
+<ul>
+{% for m in members %}
+    <li>{{ forloop.counter }} - {{ m.member }}</li>
+{% endfor %}
+</ul>
+
 {% endblock %}
