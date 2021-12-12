@@ -71,6 +71,18 @@ class Board(models.Model):
     def get_absolute_url(self):
         return reverse('board-main', kwargs={"board_id": str(self.id)})
 
+    def get_members(self):
+        return BoardMember.objects.filter(board=self.id)
+
+    def get_lists(self):
+        return List.objects.filter(board=self.id)
+    
+    def get_cards(self):
+        return Card.objects.filter(board=self.id)
+
+    def get_tags(self):
+        return Tag.objects.filter(board=self.id)
+
 class BoardMember(models.Model):
     """
     Board Member Model
@@ -95,6 +107,9 @@ class BoardMember(models.Model):
         ordering = ('board', )
         constraints = [ models.UniqueConstraint(fields=['board','member'], name='uq_member') ]
 
+    def __str__(self):
+        return self.member.username
+
     def has_admin_privileges(self):
         return self.access in {self.OWNER, self.ADMIN}
 
@@ -114,6 +129,12 @@ class List(models.Model):
 
     class Meta:
         ordering = ('board', )
+
+    def __str__(self):
+        return self.title
+
+    def get_cards(self):
+        return Card.objects.filter(board=self.board, list=self.id)
 
 class Card(models.Model):
     """
@@ -156,6 +177,12 @@ class Comment(models.Model):
     class Meta:
         ordering = ('board', 'card', )
 
+    def __str__(self):
+        return self.comment
+
+    def get_reactions(self):
+        return Reaction.objects.filter(card=self.id)
+
 class Task(models.Model):
     """
     Task Model
@@ -171,6 +198,15 @@ class Task(models.Model):
 
     class Meta:
         ordering = ('board', 'card', )
+
+    def __str__(self):
+        return self.name
+
+    def get_tags(self):
+        return CardTag.objects.filter(card=self.id)
+
+    def get_attachments(self):
+        return Attachment.objects.filter(board=self.board.id, card=self.id)
 
 class Attachment(models.Model):
     """

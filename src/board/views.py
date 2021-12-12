@@ -5,12 +5,13 @@ from .models import *
 from .forms import *
 
 # Create your views here.
+
 def board_view(request, board_id, *args, **kwargs): 
     try:
         board = Board.objects.get(id=board_id)
-        members = BoardMember.objects.filter(board=board_id)
-        lists = List.objects.filter(board=board_id)
-        cards = Card.objects.filter(board=board_id)
+        members = board.get_members() #BoardMember.objects.filter(board=board_id)
+        lists = board.get_lists()
+        cards = board.get_cards()
 
         # Just some debug text, this can be removed
         print('\nBoard:\t%s\nUser:\t(%s,%s)\nMembers:%s\n' % (
