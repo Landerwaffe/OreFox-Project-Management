@@ -22,7 +22,10 @@ from board.views import *
 
 urlpatterns = [
     path('', home_view, name = 'home'),
-    path('admin/', admin.site.urls),
+    path('login/', login_view, name = "login"),
+    path('register/', registration_view, name = "register"),
+    path('dashboard/', dashboard_view, name = 'dashboard'),
     path('b/<int:board_id>/', board_view, name = "board-main"),
+    path('admin/', admin.site.urls)
 ]
 
