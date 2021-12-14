@@ -78,7 +78,8 @@ def dashboard_view(request, *args, **kwargs):
     --------------
 
     This is the dashboard for the logged in user, we can probably add functionality for admins
-    by using the is_superuser stuff etc.    
+    by using the is_superuser stuff etc. They should have access to the board they are a member of
+    as well as the option of changing portions of their profile.   
     """
     return render(request, "dashboard.html", {
         "title": "Dashboard"
@@ -118,7 +119,7 @@ def login_view(request, *args, **kwargs):
             "title" : 'Login'
         })
 
-
+@login_required(login_url='/login/')
 def logout_view(request):
     auth.logout(request)
     # Redirect to some logout page I guess
