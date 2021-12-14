@@ -159,6 +159,12 @@ class Card(models.Model):
     def __str__(self):
         return self.title
 
+    def get_tags(self):
+        return CardTag.objects.filter(card=self.id)
+
+    def get_attachments(self):
+        return Attachment.objects.filter(board=self.board.id, card=self.id)
+
 class Comment(models.Model):
     """
     Comment Model
@@ -201,12 +207,6 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
-
-    def get_tags(self):
-        return CardTag.objects.filter(card=self.id)
-
-    def get_attachments(self):
-        return Attachment.objects.filter(board=self.board.id, card=self.id)
 
 class Attachment(models.Model):
     """
