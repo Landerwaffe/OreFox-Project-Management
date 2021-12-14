@@ -80,7 +80,9 @@ def dashboard_view(request, *args, **kwargs):
     This is the dashboard for the logged in user, we can probably add functionality for admins
     by using the is_superuser stuff etc.    
     """
-    return render(request, "dashboard.html", {})
+    return render(request, "dashboard.html", {
+        "title": "Dashboard"
+    })
 
 def login_view(request, *args, **kwargs):
     """
@@ -99,21 +101,22 @@ def login_view(request, *args, **kwargs):
         if user is not None:
             if user.is_active:
                 auth.login(request, user)
-                # Redirect to a success page.
-                return redirect('/dashboard/') 
+                return redirect('/dashboard/') # Redirect to a success page.
             else:
-                # Return a 'disabled account' error message
-                return error_view(request, "Account Disabled")
+                return error_view(request, "Account Disabled") # Return a 'disabled account' error message
         else:
             # Return an 'invalid login' error message.
-            return redirect('/') #error_view(request, "Invalid Login")
+            return redirect('/')
+
+    # If we're already logged in we don't need to see this page
+    elif request.user is not None:
+        return redirect('/dashboard/')
     
+    # Otherwise show login page
     else:
-        # If we're already logged in we don't need to see this page
-        if request.user is not None:
-            return redirect('/dashboard/')
-        else:
-            return render(request, "login.html", {})
+        return render(request, "login.html", {
+            "title" : 'Login'
+        })
 
 
 def logout_view(request):
@@ -149,4 +152,6 @@ def registration_view(request, *args, **kwargs):
         else:
             return error_view(request, "Invalid Credentials")
     else:
-        return render(request, "register.html", {})
+        return render(request, "register.html", {
+            "title" : 'Register'
+        })
